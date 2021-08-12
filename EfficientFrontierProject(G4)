@@ -1,0 +1,586 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "9fd0767d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import  libraries and dependencies\n",
+    "import pandas as pd\n",
+    "import requests\n",
+    "import json\n",
+    "import os\n",
+    "from dotenv import load_dotenv\n",
+    "import alpaca_trade_api as tradeapi\n",
+    "import hvplot"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "5895684e",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 35,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#load .env environment variables\n",
+    "load_dotenv()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "c8e6d163",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "str"
+      ]
+     },
+     "execution_count": 36,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Retrieve the quandl API key from the environment variable and store as Python variable\n",
+    "quandl_api_key = os.getenv(\"QUANDL_API_KEY\")\n",
+    "\n",
+    "type(quandl_api_key)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "721c8c9d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Set the variables for the Alpaca API and secret key\n",
+    "alpaca_api_key = os.getenv(\"ALPACA_API_KEY\")\n",
+    "alpaca_secret_key = os.getenv(\"ALPACA_SECRET_KEY\")\n",
+    "\n",
+    "# Create the Alpaca tradeapi.REST object\n",
+    "alpaca = tradeapi.REST(alpaca_api_key, alpaca_secret_key, api_version='v2')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "55a0abad",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Set the tickers for both the bond and stock portion of the portfolio\n",
+    "tickers = [\"SPY\", \"AGG\"]\n",
+    "\n",
+    "# Set timeframe to 1D \n",
+    "timeframe = \"1D\"\n",
+    "\n",
+    "# Format current date as ISO format\n",
+    "# Set both the start and end date at the date of your prior weekday \n",
+    "# This will give you the closing price of the previous trading day\n",
+    "# Alternatively you can use a start and end date of 2020-08-07\n",
+    "start_date = pd.Timestamp(\"2017-08-07\", tz=\"America/New_York\").isoformat()\n",
+    "end_date = pd.Timestamp(\"2020-08-07\", tz=\"America/New_York\").isoformat()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "id": "cf93d7bf",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead tr th {\n",
+       "        text-align: left;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead tr:last-of-type th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr>\n",
+       "      <th></th>\n",
+       "      <th colspan=\"5\" halign=\"left\">AGG</th>\n",
+       "      <th colspan=\"5\" halign=\"left\">SPY</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th></th>\n",
+       "      <th>open</th>\n",
+       "      <th>high</th>\n",
+       "      <th>low</th>\n",
+       "      <th>close</th>\n",
+       "      <th>volume</th>\n",
+       "      <th>open</th>\n",
+       "      <th>high</th>\n",
+       "      <th>low</th>\n",
+       "      <th>close</th>\n",
+       "      <th>volume</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>time</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>2017-08-07 00:00:00-04:00</th>\n",
+       "      <td>109.69</td>\n",
+       "      <td>109.72</td>\n",
+       "      <td>109.6066</td>\n",
+       "      <td>109.6850</td>\n",
+       "      <td>1425317.0</td>\n",
+       "      <td>247.49</td>\n",
+       "      <td>247.87</td>\n",
+       "      <td>247.37</td>\n",
+       "      <td>247.850</td>\n",
+       "      <td>20901988</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-08 00:00:00-04:00</th>\n",
+       "      <td>109.67</td>\n",
+       "      <td>109.69</td>\n",
+       "      <td>109.5000</td>\n",
+       "      <td>109.5810</td>\n",
+       "      <td>1998999.0</td>\n",
+       "      <td>247.51</td>\n",
+       "      <td>248.91</td>\n",
+       "      <td>246.83</td>\n",
+       "      <td>247.291</td>\n",
+       "      <td>44619069</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-09 00:00:00-04:00</th>\n",
+       "      <td>109.87</td>\n",
+       "      <td>109.87</td>\n",
+       "      <td>109.6600</td>\n",
+       "      <td>109.6700</td>\n",
+       "      <td>2069028.0</td>\n",
+       "      <td>246.47</td>\n",
+       "      <td>247.31</td>\n",
+       "      <td>246.06</td>\n",
+       "      <td>247.230</td>\n",
+       "      <td>48543032</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-10 00:00:00-04:00</th>\n",
+       "      <td>109.70</td>\n",
+       "      <td>109.85</td>\n",
+       "      <td>109.6700</td>\n",
+       "      <td>109.8053</td>\n",
+       "      <td>1691677.0</td>\n",
+       "      <td>246.28</td>\n",
+       "      <td>246.44</td>\n",
+       "      <td>243.70</td>\n",
+       "      <td>243.790</td>\n",
+       "      <td>87857827</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-11 00:00:00-04:00</th>\n",
+       "      <td>109.75</td>\n",
+       "      <td>109.94</td>\n",
+       "      <td>109.6800</td>\n",
+       "      <td>109.8850</td>\n",
+       "      <td>1613467.0</td>\n",
+       "      <td>244.02</td>\n",
+       "      <td>244.80</td>\n",
+       "      <td>243.75</td>\n",
+       "      <td>244.110</td>\n",
+       "      <td>56404847</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                              AGG                                         \\\n",
+       "                             open    high       low     close     volume   \n",
+       "time                                                                       \n",
+       "2017-08-07 00:00:00-04:00  109.69  109.72  109.6066  109.6850  1425317.0   \n",
+       "2017-08-08 00:00:00-04:00  109.67  109.69  109.5000  109.5810  1998999.0   \n",
+       "2017-08-09 00:00:00-04:00  109.87  109.87  109.6600  109.6700  2069028.0   \n",
+       "2017-08-10 00:00:00-04:00  109.70  109.85  109.6700  109.8053  1691677.0   \n",
+       "2017-08-11 00:00:00-04:00  109.75  109.94  109.6800  109.8850  1613467.0   \n",
+       "\n",
+       "                              SPY                                     \n",
+       "                             open    high     low    close    volume  \n",
+       "time                                                                  \n",
+       "2017-08-07 00:00:00-04:00  247.49  247.87  247.37  247.850  20901988  \n",
+       "2017-08-08 00:00:00-04:00  247.51  248.91  246.83  247.291  44619069  \n",
+       "2017-08-09 00:00:00-04:00  246.47  247.31  246.06  247.230  48543032  \n",
+       "2017-08-10 00:00:00-04:00  246.28  246.44  243.70  243.790  87857827  \n",
+       "2017-08-11 00:00:00-04:00  244.02  244.80  243.75  244.110  56404847  "
+      ]
+     },
+     "execution_count": 39,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Use the Alpaca get_barset function to get current closing prices the portfolio\n",
+    "# Be sure to set the `df` property after the function to format the response object as a DataFrame\n",
+    "portfolio_df = alpaca.get_barset(tickers, timeframe, start=start_date, end=end_date, limit=1000).df\n",
+    "\n",
+    "# Review the first 5 rows of the Alpaca DataFrame\n",
+    "portfolio_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "id": "8cb1126b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Access the closing price for AGG from the Alpaca DataFrame\n",
+    "# Converting the value to a floating point number\n",
+    "agg_close_price = portfolio_df[\"AGG\"][\"close\"]\n",
+    "\n",
+    "# Print the AGG closing price\n",
+    "#agg_close_price_float = float(agg_close_price)\n",
+    "#print(f\"The AGG closing price is ${agg_close_price_float}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "id": "0c3643f8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Access the closing price for SPY from the Alpaca DataFrame\n",
+    "# Converting the value to a floating point number\n",
+    "spy_close_price = portfolio_df[\"SPY\"][\"close\"]\n",
+    "\n",
+    "# Print the SPY closing price\n",
+    "#spy_close_price_float = float(spy_close_price)\n",
+    "#print(f\"The SPY closing price is ${spy_close_price_float}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "id": "879e4fd0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "The daily return of AGG is time\n",
+      "2017-08-08 00:00:00-04:00   -0.094817\n",
+      "2017-08-09 00:00:00-04:00    0.081218\n",
+      "2017-08-10 00:00:00-04:00    0.123370\n",
+      "2017-08-11 00:00:00-04:00    0.072583\n",
+      "2017-08-14 00:00:00-04:00   -0.068253\n",
+      "                               ...   \n",
+      "2020-08-03 00:00:00-04:00   -0.133824\n",
+      "2020-08-04 00:00:00-04:00    0.192630\n",
+      "2020-08-05 00:00:00-04:00   -0.192259\n",
+      "2020-08-06 00:00:00-04:00    0.150754\n",
+      "2020-08-07 00:00:00-04:00   -0.112895\n",
+      "Name: close, Length: 756, dtype: float64\n",
+      "The daily return of SPY is time\n",
+      "2017-08-08 00:00:00-04:00   -0.225540\n",
+      "2017-08-09 00:00:00-04:00   -0.024667\n",
+      "2017-08-10 00:00:00-04:00   -1.391417\n",
+      "2017-08-11 00:00:00-04:00    0.131261\n",
+      "2017-08-14 00:00:00-04:00    0.987260\n",
+      "                               ...   \n",
+      "2020-08-03 00:00:00-04:00    0.676772\n",
+      "2020-08-04 00:00:00-04:00    0.386300\n",
+      "2020-08-05 00:00:00-04:00    0.615096\n",
+      "2020-08-06 00:00:00-04:00    0.677588\n",
+      "2020-08-07 00:00:00-04:00    0.071790\n",
+      "Name: close, Length: 756, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Calculate average daily return for assets\n",
+    "agg_daily_return = agg_close_price.pct_change().dropna() * 100\n",
+    "print(f\"The daily return of AGG is {agg_daily_return}\")\n",
+    "\n",
+    "spy_daily_return = spy_close_price.pct_change().dropna() * 100\n",
+    "print(f\"The daily return of SPY is {spy_daily_return}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "id": "c372d248",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "time\n",
+      "2017-08-08 00:00:00-04:00   -0.320357\n",
+      "2017-08-09 00:00:00-04:00    0.056551\n",
+      "2017-08-10 00:00:00-04:00   -1.268047\n",
+      "2017-08-11 00:00:00-04:00    0.203844\n",
+      "2017-08-14 00:00:00-04:00    0.919007\n",
+      "                               ...   \n",
+      "2020-08-03 00:00:00-04:00    0.542948\n",
+      "2020-08-04 00:00:00-04:00    0.578930\n",
+      "2020-08-05 00:00:00-04:00    0.422836\n",
+      "2020-08-06 00:00:00-04:00    0.828342\n",
+      "2020-08-07 00:00:00-04:00   -0.041105\n",
+      "Name: close, Length: 756, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Joining AGG and SPY daily returns\n",
+    "portfolio_daily_return = agg_daily_return + spy_daily_return\n",
+    "print(portfolio_daily_return)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "id": "087dfdd4",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>close</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>time</th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>2017-08-08 00:00:00-04:00</th>\n",
+       "      <td>-0.320357</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-09 00:00:00-04:00</th>\n",
+       "      <td>0.056551</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-10 00:00:00-04:00</th>\n",
+       "      <td>-1.268047</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-11 00:00:00-04:00</th>\n",
+       "      <td>0.203844</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2017-08-14 00:00:00-04:00</th>\n",
+       "      <td>0.919007</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                              close\n",
+       "time                               \n",
+       "2017-08-08 00:00:00-04:00 -0.320357\n",
+       "2017-08-09 00:00:00-04:00  0.056551\n",
+       "2017-08-10 00:00:00-04:00 -1.268047\n",
+       "2017-08-11 00:00:00-04:00  0.203844\n",
+       "2017-08-14 00:00:00-04:00  0.919007"
+      ]
+     },
+     "execution_count": 50,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Make a DataFrame for the daily returns\n",
+    "daily_returns_df = pd.DataFrame(portfolio_daily_return)\n",
+    "daily_returns_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "id": "604577fe",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Generate summary statistics for AGG\n",
+    "agg_stats = agg_daily_return.describe()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "id": "fb5b9fb8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Generate summary statistics for SPY\n",
+    "spy_stats = spy_daily_return.describe()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "id": "d89346e2",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.3505359856259855\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Calculate the standard deviation for AGG\n",
+    "agg_std = agg_stats[2]\n",
+    "print(agg_std)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "id": "5ee1428b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1.4154118518684524\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Calculate the standard deviation for SPY\n",
+    "spy_std = spy_stats[2]\n",
+    "print(spy_std)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "98abe1d5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Joining the AGG and SPY standard deviations\n",
+    "portfolio_std = "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c1c11257",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Make a DataFrame for the standard dev\n",
+    "standard_dev_df = pd.DataFrame()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f37c9cbd",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Concatenate the DataFrames"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0a6776c9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Plot the concatenated DataFrame\n",
+    "plot = hvplot.line()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python (dev)",
+   "language": "python",
+   "name": "dev"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
