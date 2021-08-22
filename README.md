@@ -19,3 +19,17 @@ Portfolios that lie below the efficient frontier are sub-optimal because they do
 ---
 
 ## Technologies & Usage
+This project leverages Python 3.7 and the following libraries and dependencies:
+- import numpy as np
+- import pandas as pd
+- import datetime as dt
+- import sys
+- import fire
+- import constraint
+- from pandas_datareader import data as pdr
+- import ploty.graph_objects as go
+- import scipy.optimize as sc
+- from pathlib import Path
+
+## Notes
+Future steps for this app's development include integrating the code responsible for plotting the user assets with a conditional statement that provides analytical functionality, improving the user interface, and providing more comprehensive advisment.
