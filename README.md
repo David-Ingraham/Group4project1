@@ -1,3 +1,5 @@
+![makowitz_efficient_frontier_hd-2](https://user-images.githubusercontent.com/86025349/130362396-26978a52-7b15-440e-a7e9-d81113f57ad8.png)
+
 # *Group 4 Project 1*
 ## Portfolio Optimization: An Efficient Frontier-Based Advisement App
 
